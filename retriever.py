@@ -8,8 +8,6 @@ class Retriever(object):
         # Provide a way to change callback so we can change if needed. The best example that comes to mind is in tests.
         self.buffer = callback or self.process_response
 
-        # In order to give the user a way to know if the retriever is still working, we will use this attribute
-        self._is_busy = False
         self.pool = grequests.Pool(1)
 
     def fetch(self, url=''):
@@ -19,24 +17,11 @@ class Retriever(object):
         :return: The task (grequests.send response) to be evaluated if needed
         """
         self.print("Retrieving data from url: '{url}'".format(url=url))
-        self._is_busy = True
         if url:
-            try:
-                request = grequests.get(url, hooks=dict(response=self.process_response))
-                task = grequests.send(request, self.pool)
+            request = grequests.get(url, hooks=dict(response=self.process_response))
+            task = grequests.send(request, self.pool)
 
-                return task
-            except Exception as err:
-                self._is_busy = False
-                raise err
-
-    @property
-    def is_busy(self):
-        """
-        Get method for _is_busy attribute, just to avoid the user will change it
-        :return: Boolean. self._is_busy attribute value
-        """
-        return self._is_busy
+            return task
 
     @staticmethod
     def print(content):
@@ -62,7 +47,6 @@ class Retriever(object):
                 result = json.loads(result)
 
             self.render(result)
-            self._is_busy = False
         else:
             self.print("Response not valid. Status Code {code}".format(code=response.status_code))
         return response
