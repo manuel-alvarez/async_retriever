@@ -10,6 +10,7 @@ class Retriever(object):
 
         # In order to give the user a way to know if the retriever is still working, we will use this attribute
         self._is_busy = False
+        self.pool = grequests.Pool(1)
 
     def fetch(self, url=''):
         """
@@ -17,12 +18,12 @@ class Retriever(object):
         :param url: the url that is going to be retrieved
         :return: The task (grequests.send response) to be evaluated if needed
         """
-        print("Retrieving data from url: '{url}'".format(url=url))
+        self.print("Retrieving data from url: '{url}'".format(url=url))
         self._is_busy = True
         if url:
             try:
                 request = grequests.get(url, hooks=dict(response=self.process_response))
-                task = grequests.send(request, grequests.Pool(1))
+                task = grequests.send(request, self.pool)
 
                 return task
             except Exception as err:
@@ -37,6 +38,15 @@ class Retriever(object):
         """
         return self._is_busy
 
+    @staticmethod
+    def print(content):
+        """
+        This method is used only for testing purposes. This way we can capture what's being printed
+        :param content: the content that is going to be printed
+        :return: None
+        """
+        print(content)
+
     def process_response(self, response, *args, **kwargs):
         """
         It does nothing with response, but gets the text from within, converts it to dict and renders it
@@ -45,7 +55,7 @@ class Retriever(object):
         :param kwargs: Not used but needed in requests hooks
         :return: The response as it was
         """
-        print("Preprocessing the file")
+        self.print("Preprocessing the file")
         if response.status_code == 200:
             result = response.text
             if isinstance(result, str):
@@ -53,10 +63,11 @@ class Retriever(object):
 
             self.render(result)
             self._is_busy = False
+        else:
+            self.print("Response not valid. Status Code {code}".format(code=response.status_code))
         return response
 
-    @staticmethod
-    def render(response):
+    def render(self, response):
         """
         Renders the response (just response.text as a dict)
         :param response: The text gotten from url (as a dict)
@@ -64,8 +75,8 @@ class Retriever(object):
         """
         if isinstance(response, dict):
             data = response.get('data', list())
-            print("Data provided is {len} long".format(len=len(data)))
+            self.print("Data provided is {len} long".format(len=len(data)))
             for item in data:
-                print(item)
+                self.print(item)
         else:
-            print("Response not valid, please provide a valid API")
+            self.print("Response not valid, please provide a valid API")
