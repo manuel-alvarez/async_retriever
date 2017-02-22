@@ -1,7 +1,5 @@
-import json
 import unittest
 
-from requests import Response
 from retriever import Retriever
 from unittest.mock import MagicMock, Mock
 
@@ -39,13 +37,6 @@ class TestRetrieverMethods(unittest.TestCase):
         self.assertIsInstance(response.value.exception, Exception)
         self.retriever.render.assert_not_called()
 
-        # Check valid url
-        response = self.retriever.fetch("https://gist.githubusercontent.com/manuel-alvarez/aa2834634700489d68aa579faf0e133f/raw/8fcc0620f2b619cd37b18a53a8bb15b04e8b30e3/simple_file.json")
-        self.assertIsNone(response.value)  # Still None, still loading
-        response.join()  # Force the response to be retrieved
-        self.assertIsInstance(response.value.response, Response)
-        self.retriever.render.assert_called_once_with(self.json_response)
-
     def test_process_response(self):
         response = Mock()
         response.status_code = 200
@@ -60,7 +51,7 @@ class TestRetrieverMethods(unittest.TestCase):
 
         empty_response = Mock()
         empty_response.status_code = 400
-        processed_response = self.retriever.process_response(empty_response)
+        self.retriever.process_response(empty_response)
         self.assertEqual(len(self.output), 2)
         self.assertEqual(self.output[1], "Response not valid. Status Code 400")
 
