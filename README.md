@@ -27,7 +27,11 @@ pip install -r requirements.txt
 ## Execution
 
 To execute main.py, type this in your console
-```python main.py```
+```
+python main.py
+```
 
-Test have been made using unittest and mock. In order to run tests, type:
-```python tests.py```
+Tests have been made using unittest and mock. In order to run tests, type:
+```
+python tests.py
+```
